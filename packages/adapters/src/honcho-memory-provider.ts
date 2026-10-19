@@ -37,8 +37,8 @@ export function honchoWorkspaceId(settings: Record<string, string>, spaceId: str
   return honchoResourceId(configured || `rakazo-${spaceId}`);
 }
 
-export function honchoUserPeerId(userId: string): string {
-  return honchoResourceId(`user-${userId}`);
+export function honchoSpacePeerId(spaceId: string): string {
+  return honchoResourceId(`space-${spaceId}`);
 }
 
 export function honchoBotPeerId(botId: string): string {
@@ -106,7 +106,7 @@ export function createHonchoProvider(
 
 function recallQuery(query: string): string {
   return [
-    "Recall what you know about this user that is relevant to the request below.",
+    "Recall what you know about this Space that is relevant to the request below.",
     "Answer with the relevant facts only, as short plain statements.",
     `If you know nothing relevant, answer exactly ${NO_MEMORY}.`,
     "",
@@ -162,19 +162,19 @@ export class HonchoMemoryProvider implements SemanticMemoryProvider {
     context: AdapterContext,
   ): Promise<SemanticMemoryResponse<SemanticMemoryResult[]>> {
     const workspaceId = honchoWorkspaceId(this.settings, context.spaceId);
-    const user = honchoUserPeerId(context.userId);
+    const space = honchoSpacePeerId(context.spaceId);
     const bot = honchoBotPeerId(request.botId);
-    const ready = await this.ensurePeers(workspaceId, [user, bot], context.signal);
+    const ready = await this.ensurePeers(workspaceId, [space, bot], context.signal);
     if (!ready.ok) return ready;
-    // Isolated: only what this bot has observed about the user.
-    // Shared: also the user's own representation, which every bot in the Space writes to.
+    // Isolated: this bot's private view of the Space, independent of the user.
+    // Shared: also the Space-wide representation that every member's bots write to.
     const perspectives =
       request.scope === "shared"
         ? [
-            { peerId: user, entity: user },
-            { peerId: bot, target: user, entity: bot },
+            { peerId: space, entity: space },
+            { peerId: bot, target: space, entity: bot },
           ]
-        : [{ peerId: bot, target: user, entity: bot }];
+        : [{ peerId: bot, target: space, entity: bot }];
     const query = recallQuery(request.query);
     const answers = await Promise.all(
       perspectives.map(async ({ entity, ...perspective }) => ({
@@ -217,13 +217,13 @@ export class HonchoMemoryProvider implements SemanticMemoryProvider {
     const content = request.content.trim().slice(0, MAX_HONCHO_CONCLUSION_CHARS);
     if (!content) return { ok: false, error: "Honcho save skipped: memory content is empty." };
     const workspaceId = honchoWorkspaceId(this.settings, context.spaceId);
-    const user = honchoUserPeerId(context.userId);
+    const space = honchoSpacePeerId(context.spaceId);
     const bot = honchoBotPeerId(request.botId);
-    const ready = await this.ensurePeers(workspaceId, [user, bot], context.signal);
+    const ready = await this.ensurePeers(workspaceId, [space, bot], context.signal);
     if (!ready.ok) return ready;
-    const conclusions = [{ content, observerId: bot, observedId: user }];
+    const conclusions = [{ content, observerId: bot, observedId: space }];
     if (request.scope === "shared")
-      conclusions.push({ content, observerId: user, observedId: user });
+      conclusions.push({ content, observerId: space, observedId: space });
     return createHonchoConclusions(this.connection, workspaceId, conclusions, context.signal);
   }
 
