@@ -21,6 +21,9 @@ import {
 
 export const HONCHO_PROVIDER_ID = "honcho";
 
+// Shared peers are workspace-scoped; only an explicit workspace opts Spaces into sharing.
+const SHARED_PEER_ID = honchoResourceId("rakazo-shared");
+
 const DEFAULT_REASONING_LEVEL: HonchoReasoningLevel = "low";
 
 /** Sentinel the dialectic is asked to return when it has nothing relevant. */
@@ -35,10 +38,6 @@ export function honchoRequiresDeploymentOwner(): boolean {
 export function honchoWorkspaceId(settings: Record<string, string>, spaceId: string): string {
   const configured = settings.workspaceId?.trim();
   return honchoResourceId(configured || `rakazo-${spaceId}`);
-}
-
-export function honchoSpacePeerId(spaceId: string): string {
-  return honchoResourceId(`space-${spaceId}`);
 }
 
 export function honchoBotPeerId(botId: string): string {
@@ -162,19 +161,18 @@ export class HonchoMemoryProvider implements SemanticMemoryProvider {
     context: AdapterContext,
   ): Promise<SemanticMemoryResponse<SemanticMemoryResult[]>> {
     const workspaceId = honchoWorkspaceId(this.settings, context.spaceId);
-    const space = honchoSpacePeerId(context.spaceId);
     const bot = honchoBotPeerId(request.botId);
-    const ready = await this.ensurePeers(workspaceId, [space, bot], context.signal);
+    const ready = await this.ensurePeers(workspaceId, [SHARED_PEER_ID, bot], context.signal);
     if (!ready.ok) return ready;
-    // Isolated: this bot's private view of the Space, independent of the user.
-    // Shared: also the Space-wide representation that every member's bots write to.
+    // Isolated: this bot's private view of the shared peer, independent of the user.
+    // Shared: also the workspace-wide representation that all opted-in Spaces write to.
     const perspectives =
       request.scope === "shared"
         ? [
-            { peerId: space, entity: space },
-            { peerId: bot, target: space, entity: bot },
+            { peerId: SHARED_PEER_ID, entity: SHARED_PEER_ID },
+            { peerId: bot, target: SHARED_PEER_ID, entity: bot },
           ]
-        : [{ peerId: bot, target: space, entity: bot }];
+        : [{ peerId: bot, target: SHARED_PEER_ID, entity: bot }];
     const query = recallQuery(request.query);
     const answers = await Promise.all(
       perspectives.map(async ({ entity, ...perspective }) => ({
@@ -217,13 +215,12 @@ export class HonchoMemoryProvider implements SemanticMemoryProvider {
     const content = request.content.trim().slice(0, MAX_HONCHO_CONCLUSION_CHARS);
     if (!content) return { ok: false, error: "Honcho save skipped: memory content is empty." };
     const workspaceId = honchoWorkspaceId(this.settings, context.spaceId);
-    const space = honchoSpacePeerId(context.spaceId);
     const bot = honchoBotPeerId(request.botId);
-    const ready = await this.ensurePeers(workspaceId, [space, bot], context.signal);
+    const ready = await this.ensurePeers(workspaceId, [SHARED_PEER_ID, bot], context.signal);
     if (!ready.ok) return ready;
-    const conclusions = [{ content, observerId: bot, observedId: space }];
+    const conclusions = [{ content, observerId: bot, observedId: SHARED_PEER_ID }];
     if (request.scope === "shared")
-      conclusions.push({ content, observerId: space, observedId: space });
+      conclusions.push({ content, observerId: SHARED_PEER_ID, observedId: SHARED_PEER_ID });
     return createHonchoConclusions(this.connection, workspaceId, conclusions, context.signal);
   }
 
