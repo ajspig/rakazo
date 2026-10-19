@@ -46,7 +46,7 @@ export const MEMORY_PROVIDER_SETTINGS: readonly MemoryProviderSettingsRegistrati
   {
     id: "honcho",
     name: "Honcho",
-    description: "Honcho Cloud memory that reasons about each user across bots.",
+    description: "",
     SettingsForm: HonchoSettingsForm,
     connectedLabel: (config) =>
       config.settings.workspaceId ? `Honcho · ${config.settings.workspaceId}` : "Honcho Cloud",

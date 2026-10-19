@@ -50,7 +50,9 @@ function parseHonchoConnection(
   credentials: Record<string, string>,
 ): { connection: HonchoConnectionConfig; workspaceId: string } {
   const apiKey = credentials.apiKey?.trim();
-  if (!apiKey) throw new Error("apiKey is required");
+  if (!apiKey || apiKey.length < 8 || apiKey.length > 4096) {
+    throw new Error("apiKey must contain 8–4096 characters");
+  }
   const reasoningLevel = (settings.reasoningLevel?.trim() ||
     DEFAULT_REASONING_LEVEL) as HonchoReasoningLevel;
   if (!HONCHO_REASONING_LEVELS.includes(reasoningLevel)) {
@@ -193,8 +195,12 @@ export class HonchoMemoryProvider implements SemanticMemoryProvider {
       };
     }
     const results: SemanticMemoryResult[] = [];
+    const seen = new Set<string>();
     for (const { entity, result } of answers) {
       if (!result.ok || !result.value || result.value.includes(NO_MEMORY)) continue;
+      const normalized = result.value.replace(/\s+/g, " ").trim().toLowerCase();
+      if (seen.has(normalized)) continue;
+      seen.add(normalized);
       results.push({ memory: result.value, score: 1, provenance: "honcho", entity });
     }
     return { ok: true, value: results.slice(0, request.limit) };

@@ -4874,10 +4874,6 @@ msgstr "Utilisez Connecter pour vérifier la clé."
 msgid "Use default guidance"
 msgstr "Utiliser les instructions par défaut"
 
-#: src/pages/memory-providers/HonchoSettingsForm.tsx
-msgid "Use letters, digits, underscores and hyphens only."
-msgstr ""
-
 #: src/components/teach/TeachRecordingChrome.tsx
 msgid "Use Protected input for passwords."
 msgstr ""
@@ -4885,6 +4881,10 @@ msgstr ""
 #: src/pages/ModelSettingsOverlay.tsx
 msgid "Use this model"
 msgstr "Utiliser ce modèle"
+
+#: src/pages/memory-providers/HonchoSettingsForm.tsx
+msgid "Use up to 512 letters, digits, _ or -."
+msgstr ""
 
 #: src/pages/ModelSettingsOverlay.tsx
 msgid "Use your own key"
@@ -5029,7 +5029,7 @@ msgid "Working…"
 msgstr "En cours…"
 
 #: src/pages/memory-providers/HonchoSettingsForm.tsx
-msgid "Workspace (optional)"
+msgid "Workspace"
 msgstr ""
 
 #: src/components/computer/TerminalApp.tsx

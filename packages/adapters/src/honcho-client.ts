@@ -58,10 +58,10 @@ async function honchoRequest(
       redirect: "error",
       signal,
     });
-  } catch (error) {
+  } catch {
     return {
       ok: false,
-      error: `Honcho is unreachable: ${error instanceof Error ? error.message : String(error)}`,
+      error: "Honcho is unreachable or the request timed out.",
     };
   }
   if (!response.ok || !options.readJson) {
@@ -73,10 +73,10 @@ async function honchoRequest(
   try {
     const bytes = await readBodyCapped(response, MAX_HONCHO_RESPONSE_BYTES, signal);
     return { ok: true, value: JSON.parse(new TextDecoder().decode(bytes)) };
-  } catch (error) {
+  } catch {
     return {
       ok: false,
-      error: `Honcho returned an unreadable response: ${error instanceof Error ? error.message : String(error)}`,
+      error: "Honcho returned an unreadable response.",
     };
   }
 }
@@ -162,5 +162,8 @@ export async function honchoPeerChat(
   );
   if (!result.ok) return result;
   const content = (result.value as { content?: unknown } | null)?.content;
-  return { ok: true, value: typeof content === "string" ? content.trim() : "" };
+  if (typeof content !== "string") {
+    return { ok: false, error: "Honcho returned an invalid chat response." };
+  }
+  return { ok: true, value: content.trim() };
 }

@@ -4874,10 +4874,6 @@ msgstr "Use Connect to verify the key."
 msgid "Use default guidance"
 msgstr "Use default guidance"
 
-#: src/pages/memory-providers/HonchoSettingsForm.tsx
-msgid "Use letters, digits, underscores and hyphens only."
-msgstr "Use letters, digits, underscores and hyphens only."
-
 #: src/components/teach/TeachRecordingChrome.tsx
 msgid "Use Protected input for passwords."
 msgstr "Use Protected input for passwords."
@@ -4885,6 +4881,10 @@ msgstr "Use Protected input for passwords."
 #: src/pages/ModelSettingsOverlay.tsx
 msgid "Use this model"
 msgstr "Use this model"
+
+#: src/pages/memory-providers/HonchoSettingsForm.tsx
+msgid "Use up to 512 letters, digits, _ or -."
+msgstr "Use up to 512 letters, digits, _ or -."
 
 #: src/pages/ModelSettingsOverlay.tsx
 msgid "Use your own key"
@@ -5029,8 +5029,8 @@ msgid "Working…"
 msgstr "Working…"
 
 #: src/pages/memory-providers/HonchoSettingsForm.tsx
-msgid "Workspace (optional)"
-msgstr "Workspace (optional)"
+msgid "Workspace"
+msgstr "Workspace"
 
 #: src/components/computer/TerminalApp.tsx
 msgid "Wrote {path}"

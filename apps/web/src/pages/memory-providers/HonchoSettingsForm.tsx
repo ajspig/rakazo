@@ -3,7 +3,7 @@ import { Button, Field, FieldError, FieldLabel, Input } from "@rakazo/ui-web";
 import { useId, useState } from "react";
 import type { MemoryProviderConnectionDraft, MemoryProviderSettingsFormProps } from "./registry";
 
-const WORKSPACE_ID_PATTERN = /^[A-Za-z0-9_-]*$/;
+const WORKSPACE_ID_PATTERN = /^[A-Za-z0-9_-]{0,512}$/;
 
 export function HonchoSettingsForm({ busy, onConnect }: MemoryProviderSettingsFormProps) {
   const apiKeyId = useId();
@@ -14,7 +14,7 @@ export function HonchoSettingsForm({ busy, onConnect }: MemoryProviderSettingsFo
   const workspaceValid = WORKSPACE_ID_PATTERN.test(workspace.trim());
 
   async function connect() {
-    if (!apiKey.trim() || !workspaceValid) return;
+    if (apiKey.trim().length < 8 || !workspaceValid) return;
     const draft: MemoryProviderConnectionDraft = {
       settings: workspace.trim() ? { workspaceId: workspace.trim() } : {},
       credentials: { apiKey: apiKey.trim() },
@@ -24,7 +24,7 @@ export function HonchoSettingsForm({ busy, onConnect }: MemoryProviderSettingsFo
 
   return (
     <>
-      <Field>
+      <Field className="mt-1">
         <FieldLabel htmlFor={apiKeyId}>
           <Trans>API key</Trans>
         </FieldLabel>
@@ -36,12 +36,13 @@ export function HonchoSettingsForm({ busy, onConnect }: MemoryProviderSettingsFo
           placeholder="hch-…"
           type="password"
           autoComplete="new-password"
+          maxLength={4096}
         />
       </Field>
 
       <Field className="mt-4" data-invalid={workspaceValid ? undefined : true}>
         <FieldLabel htmlFor={workspaceId}>
-          <Trans>Workspace (optional)</Trans>
+          <Trans>Workspace</Trans>
         </FieldLabel>
         <Input
           id={workspaceId}
@@ -51,11 +52,12 @@ export function HonchoSettingsForm({ busy, onConnect }: MemoryProviderSettingsFo
           aria-describedby={workspaceValid ? undefined : workspaceErrorId}
           onChange={(event) => setWorkspace(event.target.value)}
           placeholder="rakazo-<space>"
+          maxLength={512}
           autoComplete="off"
         />
         {!workspaceValid ? (
           <FieldError id={workspaceErrorId}>
-            <Trans>Use letters, digits, underscores and hyphens only.</Trans>
+            <Trans>Use up to 512 letters, digits, _ or -.</Trans>
           </FieldError>
         ) : null}
       </Field>
@@ -65,7 +67,7 @@ export function HonchoSettingsForm({ busy, onConnect }: MemoryProviderSettingsFo
         variant="secondary"
         className="mt-5 rounded-full"
         size="sm"
-        disabled={busy || !apiKey.trim() || !workspaceValid}
+        disabled={busy || apiKey.trim().length < 8 || !workspaceValid}
         onClick={() => void connect()}
       >
         {busy ? <Trans>Connecting…</Trans> : <Trans>Connect</Trans>}
